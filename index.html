@@ -2,62 +2,111 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>AR Jembatan</title>
+    <title>AR Jembatan Aluang Saiyo</title>
 
-  <script type="module"
-    src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js">
-  </script>
+    <script type="module"
+    src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
+    </script>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      text-align: center;
-      background: #f1f1f1;
-    }
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-    h2 {
-      padding: 15px;
-    }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #eef1f5;
+            text-align: center;
+        }
 
-    model-viewer {
-      width: 100%;
-      height: 80vh;
-    }
+        header {
+            background: #142b4a;
+            color: white;
+            padding: 18px;
+        }
 
-    button {
-      background: #1677e8;
-      color: white;
-      border: none;
-      padding: 15px 25px;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-  </style>
+        h2 {
+            margin: 0;
+        }
+
+        p {
+            font-size: 14px;
+        }
+
+        model-viewer {
+            width: 100%;
+            height: 75vh;
+            background: white;
+        }
+
+        .info {
+            padding: 15px;
+        }
+
+        #status {
+            color: #333;
+            font-size: 14px;
+        }
+
+        button {
+            background: #142b4a;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
 </head>
 
 <body>
 
-  <h2>Visualisasi AR Jembatan</h2>
+<header>
+    <h2>AR Jembatan Aluang Saiyo</h2>
+    <p>Visualisasi 3D dan Augmented Reality</p>
+</header>
 
-  <model-viewer
-    src="PBS_baru_1-compressed-compressed.glb"
-    ar
-    ar-modes="scene-viewer webxr"
-    ar-scale="fixed"
+<model-viewer
+    id="bridge"
+    src="PBS_baru_1-compressed-compressedE.glb"
     camera-controls
+    auto-rotate
+    ar
+    ar-modes="scene-viewer webxr quick-look"
+    ar-placement="floor"
     shadow-intensity="1"
-    alt="Model Jembatan">
+    exposure="1"
+    alt="Model 3D Jembatan Aluang Saiyo">
 
     <button slot="ar-button">
-      Tampilkan Jembatan dalam AR
+        LIHAT JEMBATAN DALAM AR
     </button>
 
-  </model-viewer>
+</model-viewer>
+
+<div class="info">
+    <p id="status">Memuat model 3D jembatan...</p>
+    <p>Geser untuk memutar model dan gunakan zoom untuk memperbesar.</p>
+</div>
+
+<script>
+    const bridge = document.getElementById("bridge");
+    const status = document.getElementById("status");
+
+    bridge.addEventListener("load", () => {
+        status.textContent = "Model 3D berhasil dimuat!";
+    });
+
+    bridge.addEventListener("error", () => {
+        status.textContent =
+        "Model gagal dimuat. Periksa nama dan lokasi file GLB.";
+    });
+</script>
 
 </body>
 </html>
-
