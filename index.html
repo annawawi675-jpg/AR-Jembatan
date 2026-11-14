@@ -2,66 +2,51 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>AR Jembatan Aluang Saiyo</title>
+<title>AR Jembatan Aluang Saiyo</title>
 
-    <script type="module"
-    src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
-    </script>
+<script type="module"
+src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
+</script>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<style>
+* { box-sizing: border-box; }
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #eef1f5;
-            text-align: center;
-        }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #eef1f5;
+}
 
-        header {
-            background: #142b4a;
-            color: white;
-            padding: 18px;
-        }
+header {
+    background: #142b4a;
+    color: white;
+    padding: 20px;
+}
 
-        h2 {
-            margin: 0;
-        }
+model-viewer {
+    width: 100%;
+    height: 70vh;
+    background: white;
+}
 
-        p {
-            font-size: 14px;
-        }
+#status {
+    padding: 15px;
+    white-space: pre-wrap;
+    font-size: 14px;
+}
 
-        model-viewer {
-            width: 100%;
-            height: 75vh;
-            background: white;
-        }
-
-        .info {
-            padding: 15px;
-        }
-
-        #status {
-            color: #333;
-            font-size: 14px;
-        }
-
-        button {
-            background: #142b4a;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-    </style>
+button {
+    background: #142b4a;
+    color: white;
+    padding: 14px 22px;
+    border: none;
+    border-radius: 8px;
+}
+</style>
 </head>
 
 <body>
@@ -81,7 +66,7 @@
     ar-placement="floor"
     shadow-intensity="1"
     exposure="1"
-    alt="Model 3D Jembatan Aluang Saiyo">
+    alt="Jembatan Aluang Saiyo">
 
     <button slot="ar-button">
         LIHAT JEMBATAN DALAM AR
@@ -89,23 +74,57 @@
 
 </model-viewer>
 
-<div class="info">
-    <p id="status">Memuat model 3D jembatan...</p>
-    <p>Geser untuk memutar model dan gunakan zoom untuk memperbesar.</p>
-</div>
+<div id="status">Sedang memeriksa file...</div>
 
 <script>
-    const bridge = document.getElementById("bridge");
-    const status = document.getElementById("status");
+const bridge = document.getElementById("bridge");
+const status = document.getElementById("status");
 
-    bridge.addEventListener("load", () => {
-        status.textContent = "Model 3D berhasil dimuat!";
-    });
+async function checkModel() {
+    try {
+        const response = await fetch("./Jembatan.glb", {
+            method: "HEAD",
+            cache: "no-store"
+        });
 
-    bridge.addEventListener("error", () => {
+        const size = response.headers.get("content-length");
+        const type = response.headers.get("content-type");
+
+        if (!response.ok) {
+            status.textContent =
+                "GAGAL: File GLB tidak ditemukan.\n" +
+                "HTTP Status: " + response.status;
+            return;
+        }
+
         status.textContent =
-        "Model gagal dimuat. Periksa nama dan lokasi file GLB.";
-    });
+            "File GLB ditemukan!\n" +
+            "HTTP Status: " + response.status + "\n" +
+            "Ukuran: " +
+            (size ? (Number(size) / 1048576).toFixed(2)
+            + " MB" : "Tidak diketahui") +
+            "\nTipe: " + (type || "Tidak diketahui") +
+            "\nSedang memuat model 3D...";
+
+    } catch (error) {
+        status.textContent =
+            "GAGAL MEMERIKSA FILE:\n" + error.message;
+    }
+}
+
+bridge.addEventListener("load", () => {
+    status.textContent =
+        "BERHASIL! Model 3D Jembatan berhasil dimuat.";
+});
+
+bridge.addEventListener("error", () => {
+    status.textContent =
+        "File ditemukan atau sedang diperiksa, " +
+        "tetapi model 3D gagal diproses.\n" +
+        "Periksa validitas file GLB dan Console browser.";
+});
+
+checkModel();
 </script>
 
 </body>
