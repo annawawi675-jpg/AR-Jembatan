@@ -7,9 +7,8 @@
 
 <title>AR Jembatan Aluang Saiyo</title>
 
-<!-- Library Model Viewer -->
 <script type="module"
-src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.4.0/model-viewer.min.js">
+src="https://unpkg.com/@google/model-viewer@4.4.0/dist/model-viewer.min.js">
 </script>
 
 <style>
@@ -20,8 +19,8 @@ src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.4.0/model-viewer.min.j
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    text-align: center;
     background: #eef1f5;
+    text-align: center;
 }
 
 header {
@@ -35,33 +34,27 @@ header h2 {
 }
 
 model-viewer {
-    display: block;
     width: 100%;
     height: 75vh;
     min-height: 400px;
-    background: white;
+    display: block;
+    background: #e5eaf0;
 }
 
 #status {
-    padding: 15px;
-    font-size: 14px;
+    padding: 18px;
     white-space: pre-wrap;
-    line-height: 1.6;
+    font-size: 14px;
+    line-height: 1.7;
 }
 
 .ar-button {
     background: #142b4a;
     color: white;
-    padding: 14px 22px;
-    border: none;
+    border: 0;
     border-radius: 8px;
+    padding: 14px 22px;
     font-size: 15px;
-    cursor: pointer;
-}
-
-footer {
-    padding: 15px;
-    color: #555;
 }
 
 </style>
@@ -76,12 +69,16 @@ footer {
 
 <model-viewer
     id="bridge"
-    src="Jembatan.glb"
+    src="./Jembatan.glb"
     alt="Model 3D Jembatan Aluang Saiyo"
 
     camera-controls
     auto-rotate
-    touch-action="pan-y"
+    loading="eager"
+    reveal="auto"
+
+    camera-orbit="0deg 75deg auto"
+    field-of-view="30deg"
 
     ar
     ar-modes="scene-viewer webxr quick-look"
@@ -89,7 +86,6 @@ footer {
 
     shadow-intensity="1"
     exposure="1"
-    environment-image="neutral"
     interaction-prompt="auto">
 
     <button slot="ar-button" class="ar-button">
@@ -99,80 +95,99 @@ footer {
 </model-viewer>
 
 <div id="status">
-    Sedang memeriksa file GLB...
+Memulai pemeriksaan...
 </div>
 
-<footer>
-    <p>AR Jembatan Aluang Saiyo</p>
-    <p>Visualisasi Model Infrastruktur 3D</p>
-</footer>
-
 <script>
+
 const bridge = document.getElementById("bridge");
 const status = document.getElementById("status");
 
-const modelPath = "./Jembatan.glb";
+function show(message) {
+    status.textContent = message;
+}
 
-// Memeriksa keberadaan file GLB
-async function checkModel() {
+// Memeriksa apakah library berhasil dimuat
+async function initialize() {
 
     try {
 
-        const response = await fetch(modelPath, {
+        show("Memuat library 3D...");
+
+        await customElements.whenDefined("model-viewer");
+
+        show("Library berhasil dimuat.\nMemeriksa file GLB...");
+
+        const response = await fetch("./Jembatan.glb", {
             method: "HEAD",
             cache: "no-store"
         });
 
         if (!response.ok) {
-
-            status.textContent =
-                "FILE GLB TIDAK DITEMUKAN!\n" +
-                "HTTP Status: " + response.status +
-                "\nPeriksa nama dan lokasi file GLB.";
-
-            return;
+            throw new Error(
+                "File GLB tidak ditemukan. HTTP " +
+                response.status
+            );
         }
 
-        const size =
-            response.headers.get("content-length");
-
-        status.textContent =
-            "FILE GLB DITEMUKAN!\n" +
-            "Status: " + response.status +
-            "\nUkuran: " +
-            (size
-                ? (Number(size) / 1048576).toFixed(2) + " MB"
-                : "Tidak diketahui") +
-            "\nSedang memuat model 3D...";
+        show(
+            "File GLB berhasil ditemukan.\n" +
+            "Ukuran: " +
+            (
+                response.headers.get("content-length")
+                ? (
+                    Number(response.headers.get("content-length"))
+                    / 1048576
+                  ).toFixed(2) + " MB"
+                : "Tidak diketahui"
+            ) +
+            "\nMemproses model 3D..."
+        );
 
     } catch (error) {
 
-        status.textContent =
-            "GAGAL MEMERIKSA FILE!\n" +
-            error.message;
+        show("PEMERIKSAAN GAGAL:\n" + error.message);
 
     }
+
 }
 
-// Jika model berhasil dimuat
+// Progress pemuatan model
+bridge.addEventListener("progress", (event) => {
+
+    const progress =
+        Math.round(event.detail.totalProgress * 100);
+
+    show("Sedang memuat model 3D: " + progress + "%");
+
+});
+
+// Jika berhasil
 bridge.addEventListener("load", () => {
 
-    status.textContent =
-        "BERHASIL!\n" +
-        "Model 3D Jembatan Aluang Saiyo berhasil dimuat.";
+    show(
+        "BERHASIL!\n\n" +
+        "Model Jembatan Aluang Saiyo berhasil dimuat.\n" +
+        "Silakan putar dan perbesar model."
+    );
 
 });
 
-// Jika model gagal dimuat
-bridge.addEventListener("error", () => {
+// Jika gagal
+bridge.addEventListener("error", (event) => {
 
-    status.textContent =
-        "MODEL 3D GAGAL DIMUAT!\n" +
-        "File mungkin rusak atau format GLB tidak valid.";
+    show(
+        "MODEL GAGAL DIMUAT!\n\n" +
+        "Detail kesalahan: " +
+        (event.detail?.type || "Tidak diketahui") +
+        "\nPeriksa format dan struktur file GLB."
+    );
 
 });
 
-checkModel();
+// Jalankan pemeriksaan
+initialize();
+
 </script>
 
 </body>
