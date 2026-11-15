@@ -9,27 +9,27 @@
 <title>AR Jembatan Aluang Saiyo</title>
 
 <!-- ================================= -->
-<!-- MES HOPT DECODER CONFIGURATION -->
+<!-- 1. KONFIGURASI MES HOPT DECODER -->
 <!-- ================================= -->
 
 <script>
-window.ModelViewerElement =
-window.ModelViewerElement || {};
+self.ModelViewerElement =
+self.ModelViewerElement || {};
 
-window.ModelViewerElement.meshoptDecoderLocation =
-"https://cdn.jsdelivr.net/npm/meshoptimizer@0.20.0/meshopt_decoder.js";
+self.ModelViewerElement.meshoptDecoderLocation =
+"https://cdn.jsdelivr.net/npm/meshoptimizer/meshopt_decoder.js";
 </script>
 
 <!-- ================================= -->
-<!-- GOOGLE MODEL VIEWER -->
+<!-- 2. GOOGLE MODEL VIEWER VERSI 4.4.0 -->
 <!-- ================================= -->
 
 <script type="module"
-src="https://unpkg.com/@google/model-viewer@4.4.0/dist/model-viewer.min.js">
+src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.4.0/model-viewer.min.js">
 </script>
 
 <!-- ================================= -->
-<!-- CSS DESIGN -->
+<!-- 3. CSS DESIGN -->
 <!-- ================================= -->
 
 <style>
@@ -122,7 +122,7 @@ footer {
 <body>
 
 <!-- ================================= -->
-<!-- HEADER -->
+<!-- 4. HEADER -->
 <!-- ================================= -->
 
 <header>
@@ -135,21 +135,25 @@ footer {
 
 
 <!-- ================================= -->
-<!-- MODEL 3D -->
+<!-- 5. MODEL 3D -->
 <!-- ================================= -->
 
 <div class="container">
 
 <model-viewer
+
     id="bridge"
 
     alt="Model 3D Jembatan Aluang Saiyo"
 
-    crossorigin="anonymous"
-
     camera-controls
+    touch-action="pan-y"
+
     auto-rotate
+    rotation-per-second="15deg"
+
     loading="eager"
+    reveal="auto"
 
     camera-orbit="0deg 75deg auto"
     field-of-view="30deg"
@@ -159,7 +163,12 @@ footer {
 
     ar
     ar-modes="scene-viewer webxr quick-look"
-    ar-placement="floor">
+    ar-placement="floor"
+    ar-scale="auto"
+
+    interaction-prompt="auto"
+
+>
 
     <button
         slot="ar-button"
@@ -173,18 +182,20 @@ footer {
 
 
 <!-- ================================= -->
-<!-- STATUS PEMUATAN -->
+<!-- 6. STATUS PEMUATAN -->
 <!-- ================================= -->
 
 <div id="status">
+
 Memulai sistem AR Jembatan Aluang Saiyo...
+
 </div>
 
 </div>
 
 
 <!-- ================================= -->
-<!-- FOOTER -->
+<!-- 7. FOOTER -->
 <!-- ================================= -->
 
 <footer>
@@ -197,7 +208,7 @@ Memulai sistem AR Jembatan Aluang Saiyo...
 
 
 <!-- ================================= -->
-<!-- JAVASCRIPT -->
+<!-- 8. JAVASCRIPT TERBARU -->
 <!-- ================================= -->
 
 <script>
@@ -209,7 +220,7 @@ Memulai sistem AR Jembatan Aluang Saiyo...
 const DRIVE_FILE_ID =
 "161WMZ0q9zWmOAK138XJ7yRxU-SI6xiI4";
 
-// Link download langsung Google Drive
+// URL FILE GLB GOOGLE DRIVE
 
 const MODEL_URL =
 "https://drive.google.com/uc?export=download&id="
@@ -226,33 +237,89 @@ document.getElementById("bridge");
 const status =
 document.getElementById("status");
 
+let modelLoaded = false;
+let loadTimeout;
+
 
 // =================================
-// LOAD MODEL
+// FUNGSI STATUS
+// =================================
+
+function updateStatus(message) {
+
+    status.textContent = message;
+
+}
+
+
+// =================================
+// MEMUAT MODEL 3D
 // =================================
 
 async function loadBridge() {
 
     try {
 
-        status.textContent =
-        "Menghubungkan ke Google Drive...";
+        updateStatus(
+            "Menghubungkan ke Google Drive...\n" +
+            "Mohon tunggu."
+        );
 
-        await customElements.whenDefined("model-viewer");
+        // Menunggu library Model Viewer
 
-        status.textContent =
-        "Library 3D berhasil dimuat.\n" +
-        "Menghubungkan model jembatan...";
+        await customElements.whenDefined(
+            "model-viewer"
+        );
+
+        updateStatus(
+            "Library 3D berhasil dimuat.\n" +
+            "Mengambil model Jembatan Aluang Saiyo..."
+        );
+
+        // Memulai pemuatan model
 
         bridge.src = MODEL_URL;
+
+        // Batas waktu diagnostik
+
+        clearTimeout(loadTimeout);
+
+        loadTimeout = setTimeout(() => {
+
+            if (!modelLoaded) {
+
+                updateStatus(
+                    "PEMUATAN BELUM BERHASIL.\n\n" +
+                    "Model belum berhasil dirender.\n" +
+                    "Periksa Console browser dengan menekan F12.\n\n" +
+                    "Kemungkinan masalah:\n" +
+                    "1. Akses Google Drive / CORS.\n" +
+                    "2. Meshopt Decoder.\n" +
+                    "3. Tekstur WebP.\n" +
+                    "4. Struktur file GLB."
+                );
+
+                console.warn(
+                    "Model belum berhasil dimuat dalam 30 detik."
+                );
+
+            }
+
+        }, 30000);
 
     }
 
     catch (error) {
 
-        status.textContent =
-        "GAGAL MEMULAI MODEL 3D:\n" +
-        error.message;
+        updateStatus(
+            "GAGAL MEMULAI MODEL 3D:\n" +
+            error.message
+        );
+
+        console.error(
+            "INITIALIZATION ERROR:",
+            error
+        );
 
     }
 
@@ -269,9 +336,20 @@ bridge.addEventListener("progress", (event) => {
         event.detail.totalProgress * 100
     );
 
-    status.textContent =
-    "Sedang memuat model jembatan: "
-    + progress + "%";
+    if (!modelLoaded) {
+
+        updateStatus(
+            "SEDANG MEMUAT MODEL JEMBATAN\n\n" +
+            "Progress: " + progress + "%\n" +
+            "Sedang memproses geometri dan tekstur..."
+        );
+
+    }
+
+    console.log(
+        "MODEL PROGRESS:",
+        progress + "%"
+    );
 
 });
 
@@ -280,11 +358,32 @@ bridge.addEventListener("progress", (event) => {
 // MODEL BERHASIL DIMUAT
 // =================================
 
-bridge.addEventListener("load", () => {
+bridge.addEventListener("load", (event) => {
 
-    status.textContent =
-    "BERHASIL!\n\n" +
-    "Model 3D Jembatan Aluang Saiyo berhasil dimuat.";
+    modelLoaded = true;
+
+    clearTimeout(loadTimeout);
+
+    updateStatus(
+        "BERHASIL!\n\n" +
+        "Model 3D Jembatan Aluang Saiyo berhasil dimuat.\n\n" +
+        "Silakan putar dan perbesar model."
+    );
+
+    console.log(
+        "MODEL BERHASIL DIMUAT:",
+        event.detail
+    );
+
+    console.log(
+        "MODEL LOADED:",
+        bridge.loaded
+    );
+
+    console.log(
+        "MODEL VISIBLE:",
+        bridge.modelIsVisible
+    );
 
 });
 
@@ -295,26 +394,67 @@ bridge.addEventListener("load", () => {
 
 bridge.addEventListener("error", (event) => {
 
-    status.textContent =
-    "MODEL GAGAL DIMUAT!\n\n" +
-    "Periksa akses Google Drive, CORS, " +
-    "format GLB, dan kompatibilitas tekstur.\n" +
-    "Detail: " +
-    (event.detail?.type || "Tidak diketahui");
+    modelLoaded = false;
+
+    clearTimeout(loadTimeout);
+
+    const errorType =
+        event.detail?.type || "Tidak diketahui";
+
+    const errorDetail =
+        event.detail?.sourceError?.message ||
+        event.detail?.sourceError ||
+        "Tidak tersedia";
+
+    updateStatus(
+        "MODEL GAGAL DIMUAT!\n\n" +
+        "Jenis kesalahan: " + errorType +
+        "\nDetail: " + errorDetail +
+        "\n\nPeriksa file GLB, Google Drive, " +
+        "CORS, decoder, dan tekstur."
+    );
+
+    console.error(
+        "MODEL VIEWER ERROR:",
+        event.detail
+    );
 
 });
 
 
 // =================================
-// INITIALIZE
+// PEMERIKSAAN VISUAL MODEL
+// =================================
+
+bridge.addEventListener("model-visibility", (event) => {
+
+    console.log(
+        "MODEL VISIBILITY:",
+        event.detail
+    );
+
+});
+
+
+// =================================
+// STATUS AUGMENTED REALITY
+// =================================
+
+bridge.addEventListener("ar-status", (event) => {
+
+    console.log(
+        "AR STATUS:",
+        event.detail.status
+    );
+
+});
+
+
+// =================================
+// INISIALISASI WEBSITE
 // =================================
 
 loadBridge();
-
-</script>
-
-</body>
-</html>
 
 </script>
 
