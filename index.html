@@ -1,17 +1,30 @@
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>AR Jembatan Aluang Saiyo</title>
 
+<!-- Meshopt Decoder -->
+<script>
+window.ModelViewerElement =
+window.ModelViewerElement || {};
+
+window.ModelViewerElement.meshoptDecoderLocation =
+"https://cdn.jsdelivr.net/npm/meshoptimizer@0.20.0/meshopt_decoder.js";
+</script>
+
+<!-- Google Model Viewer -->
 <script type="module"
 src="https://unpkg.com/@google/model-viewer@4.4.0/dist/model-viewer.min.js">
 </script>
 
 <style>
+
 * {
     box-sizing: border-box;
 }
@@ -26,35 +39,57 @@ body {
 header {
     background: #142b4a;
     color: white;
-    padding: 20px;
+    padding: 22px 10px;
 }
 
 header h2 {
     margin: 0;
+    font-size: 24px;
+}
+
+header p {
+    margin-bottom: 0;
+}
+
+.container {
+    padding: 15px;
 }
 
 model-viewer {
     width: 100%;
-    height: 75vh;
+    height: 72vh;
     min-height: 400px;
-    display: block;
-    background: #e5eaf0;
+    background: #ffffff;
+    border-radius: 12px;
 }
 
 #status {
-    padding: 18px;
-    white-space: pre-wrap;
+    padding: 15px;
     font-size: 14px;
-    line-height: 1.7;
+    color: #142b4a;
+    line-height: 1.6;
+    white-space: pre-wrap;
 }
 
 .ar-button {
     background: #142b4a;
     color: white;
-    border: 0;
+    border: none;
+    padding: 15px 25px;
     border-radius: 8px;
-    padding: 14px 22px;
     font-size: 15px;
+    cursor: pointer;
+}
+
+.ar-button:hover {
+    background: #24558a;
+}
+
+footer {
+    background: #142b4a;
+    color: white;
+    padding: 15px;
+    margin-top: 20px;
 }
 
 </style>
@@ -63,130 +98,166 @@ model-viewer {
 <body>
 
 <header>
-    <h2>AR Jembatan Aluang Saiyo</h2>
-    <p>Visualisasi 3D dan Augmented Reality</p>
+
+<h2>AR Jembatan Aluang Saiyo</h2>
+
+<p>Visualisasi 3D dan Augmented Reality</p>
+
 </header>
+
+<div class="container">
 
 <model-viewer
     id="bridge"
-    src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+
     alt="Model 3D Jembatan Aluang Saiyo"
 
     camera-controls
     auto-rotate
     loading="eager"
-    reveal="auto"
 
     camera-orbit="0deg 75deg auto"
     field-of-view="30deg"
 
-    ar
-    ar-modes="scene-viewer webxr quick-look"
-    ar-placement="floor"
-
     shadow-intensity="1"
     exposure="1"
-    interaction-prompt="auto">
 
-    <button slot="ar-button" class="ar-button">
+    ar
+    ar-modes="scene-viewer webxr quick-look"
+    ar-placement="floor">
+
+    <button
+        slot="ar-button"
+        class="ar-button">
+
         LIHAT JEMBATAN DALAM AR
+
     </button>
 
 </model-viewer>
 
 <div id="status">
-Memulai pemeriksaan...
+Memulai sistem AR...
 </div>
+
+</div>
+
+<footer>
+
+<p>AR Jembatan Aluang Saiyo</p>
+<p>Visualisasi Infrastruktur 3D</p>
+
+</footer>
 
 <script>
 
-const bridge = document.getElementById("bridge");
-const status = document.getElementById("status");
+// =================================
+// GOOGLE DRIVE CONFIGURATION
+// =================================
 
-function show(message) {
-    status.textContent = message;
-}
+// Ganti dengan ID file Google Drive kamu
 
-// Memeriksa apakah library berhasil dimuat
-async function initialize() {
+const DRIVE_FILE_ID = "161WMZ0q9zWmOAK138XJ7yRxU-SI6xiI4";
 
-    try {
+// Link download langsung Google Drive
 
-        show("Memuat library 3D...");
+const MODEL_URL =
+"https://drive.google.com/file/d/161WMZ0q9zWmOAK138XJ7yRxU-SI6xiI4/view?usp=drive_link"
++ DRIVE_FILE_ID;
 
-        await customElements.whenDefined("model-viewer");
 
-        show("Library berhasil dimuat.\nMemeriksa file GLB...");
+// =================================
+// MODEL VIEWER
+// =================================
 
-        const response = await fetch("./Jembatan.glb", {
-            method: "HEAD",
-            cache: "no-store"
-        });
+const bridge =
+document.getElementById("bridge");
 
-        if (!response.ok) {
-            throw new Error(
-                "File GLB tidak ditemukan. HTTP " +
-                response.status
-            );
-        }
+const status =
+document.getElementById("status");
 
-        show(
-            "File GLB berhasil ditemukan.\n" +
-            "Ukuran: " +
-            (
-                response.headers.get("content-length")
-                ? (
-                    Number(response.headers.get("content-length"))
-                    / 1048576
-                  ).toFixed(2) + " MB"
-                : "Tidak diketahui"
-            ) +
-            "\nMemproses model 3D..."
-        );
 
-    } catch (error) {
+// =================================
+// LOAD MODEL
+// =================================
 
-        show("PEMERIKSAAN GAGAL:\n" + error.message);
+async function loadBridge() {
+
+    if (
+        DRIVE_FILE_ID === "MASUKKAN_ID_GOOGLE_DRIVE"
+    ) {
+
+        status.textContent =
+        "Silakan masukkan ID Google Drive terlebih dahulu.";
+
+        return;
 
     }
 
+    status.textContent =
+    "Sedang menghubungkan ke Google Drive...";
+
+    bridge.src = MODEL_URL;
+
 }
 
-// Progress pemuatan model
+
+// =================================
+// PROGRESS
+// =================================
+
 bridge.addEventListener("progress", (event) => {
 
-    const progress =
-        Math.round(event.detail.totalProgress * 100);
+    const progress = Math.round(
+        event.detail.totalProgress * 100
+    );
 
-    show("Sedang memuat model 3D: " + progress + "%");
+    status.textContent =
+    "Sedang memuat model jembatan: "
+    + progress + "%";
 
 });
 
-// Jika berhasil
+
+// =================================
+// MODEL LOADED
+// =================================
+
 bridge.addEventListener("load", () => {
 
-    show(
-        "BERHASIL!\n\n" +
-        "Model Jembatan Aluang Saiyo berhasil dimuat.\n" +
-        "Silakan putar dan perbesar model."
-    );
+    status.textContent =
+    "BERHASIL!\n" +
+    "Model 3D Jembatan Aluang Saiyo berhasil dimuat.";
 
 });
 
-// Jika gagal
+
+// =================================
+// MODEL ERROR
+// =================================
+
 bridge.addEventListener("error", (event) => {
 
-    show(
-        "MODEL GAGAL DIMUAT!\n\n" +
-        "Detail kesalahan: " +
-        (event.detail?.type || "Tidak diketahui") +
-        "\nPeriksa format dan struktur file GLB."
-    );
+    status.textContent =
+    "MODEL GAGAL DIMUAT!\n\n" +
+    "Periksa izin Google Drive, CORS, " +
+    "format GLB, dan kompatibilitas tekstur.\n" +
+    "Detail: " +
+    (event.detail?.type || "Tidak diketahui");
 
 });
 
-// Jalankan pemeriksaan
-initialize();
+
+// =================================
+// INITIALIZE
+// =================================
+
+customElements.whenDefined("model-viewer")
+.then(() => {
+
+    loadBridge();
+
+});
 
 </script>
 
